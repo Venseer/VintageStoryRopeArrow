@@ -10,6 +10,11 @@ namespace RopeArrow;
 
 public sealed class BlockRopeArrowRope : Block
 {
+    public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+    {
+        return false;
+    }
+
     public override void OnEntityCollide(IWorldAccessor world, Entity entity, BlockPos pos, BlockFacing facing, Vec3d collideSpeed, bool isImpact)
     {
         base.OnEntityCollide(world, entity, pos, facing, collideSpeed, false);
@@ -17,6 +22,29 @@ public sealed class BlockRopeArrowRope : Block
 
     public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
     {
+        if (RopeArrowModSystem.Settings.DestroyWholeRopeWhenSegmentBroken)
+        {
+            BlockPos above = pos.UpCopy();
+            for (int ropeCount = 0; ropeCount < RopeArrowModSystem.Settings.MaxRopeLength; ropeCount++)
+            {
+                Block aboveBlock = world.BlockAccessor.GetBlock(above);
+                if (aboveBlock is BlockRopeArrowAnchor anchorBlock &&
+                    world.BlockAccessor.GetBlockEntity(above) is BlockEntityRopeArrowAnchor anchor)
+                {
+                    anchor.PrepareForBreak(forceReturnMaterials: true);
+                    anchorBlock.OnBlockBroken(world, above, byPlayer, dropQuantityMultiplier);
+                    break;
+                }
+
+                if (aboveBlock is not BlockRopeArrowRope)
+                {
+                    break;
+                }
+
+                above.Y++;
+            }
+        }
+
         int[] ropeBlockIds =
         {
             world.GetBlock(new AssetLocation("ropearrow:rope-north"))?.BlockId ?? -1,
@@ -37,12 +65,17 @@ public sealed class BlockRopeArrowRope : Block
 
     public override ItemStack[] GetDrops(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
     {
-        return Array.Empty<ItemStack>();
+        return [];
     }
 }
 
 public sealed class BlockRopeArrowAnchor : Block
 {
+    public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+    {
+        return false;
+    }
+
     public override void OnJsonTesselation(ref MeshData sourceMesh, ref int[] lightRgbsByCorner, BlockPos pos, Block[] chunkExtBlocks, int extIndex3d)
     {
         base.OnJsonTesselation(ref sourceMesh, ref lightRgbsByCorner, pos, chunkExtBlocks, extIndex3d);
@@ -76,17 +109,17 @@ public sealed class BlockRopeArrowAnchor : Block
 
     public override Cuboidf[] GetCollisionBoxes(IBlockAccessor blockAccessor, BlockPos pos)
     {
-        return [new(0, 0, 0, 0, 1, 0)];
+        return [new Cuboidf(0, 0, 0, 0, 1, 0)];
     }
 
     private Cuboidf[] GetArrowBoxes(IBlockAccessor blockAccessor, BlockPos pos)
     {
         if (blockAccessor.GetBlockEntity(pos) is not BlockEntityRopeArrowAnchor anchor || !anchor.HasArrowTransform)
         {
-            return Array.Empty<Cuboidf>();
+            return [];
         }
 
-        return new[] { anchor.GetArrowBounds(pos) };
+        return [anchor.GetArrowBounds(pos)];
     }
 
     public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
@@ -101,7 +134,7 @@ public sealed class BlockRopeArrowAnchor : Block
 
     public override ItemStack[] GetDrops(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
     {
-        List<ItemStack> drops = new();
+        List<ItemStack> drops = [];
         if (world.BlockAccessor.GetBlockEntity(pos) is BlockEntityRopeArrowAnchor anchor)
         {
             foreach (string material in anchor.SourceArrowMaterials)
@@ -111,7 +144,9 @@ public sealed class BlockRopeArrowAnchor : Block
 
             if (anchor.ReturnMaterialsOnBreak)
             {
-                AddDrop(drops, world, "game:gear-rusty");
+                if(RopeArrowModSystem.ServerRequiresRustyGear) {
+                    AddDrop(drops, world, "game:gear-rusty");
+                }
                 AddDrop(drops, world, "game:rope");
             }
         }
@@ -131,7 +166,6 @@ public sealed class BlockRopeArrowAnchor : Block
 
 public sealed class BlockEntityRopeArrowAnchor : BlockEntity
 {
-    private const int MaxRopeLength = 12;
     private const int SegmentIntervalMs = 200;
 
     private readonly List<BlockPos> ropePositions = new();
@@ -311,7 +345,7 @@ public sealed class BlockEntityRopeArrowAnchor : BlockEntity
 
     private void OnUnspoolTick(float deltaTime)
     {
-        if (!unspooling || ropePositions.Count >= MaxRopeLength)
+        if (!unspooling || ropePositions.Count >= Math.Clamp(RopeArrowModSystem.Settings.MaxRopeLength, 1, 64))
         {
             StopUnspooling();
             return;
@@ -348,14 +382,15 @@ public sealed class BlockEntityRopeArrowAnchor : BlockEntity
         MarkDirty();
     }
 
-    public void PrepareForBreak()
+    public void PrepareForBreak(bool forceReturnMaterials = false)
     {
         if (breakPrepared)
         {
             return;
         }
 
-        ReturnMaterialsOnBreak = HasAllRopeSegments();
+        ReturnMaterialsOnBreak = forceReturnMaterials || (HasAllRopeSegments() &&
+            Api.World.Rand.NextDouble() * 100 < Math.Clamp(RopeArrowModSystem.Settings.RefundChancePercent, 0, 100));
         breakPrepared = true;
         StopUnspooling();
 
