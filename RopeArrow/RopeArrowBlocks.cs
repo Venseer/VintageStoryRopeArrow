@@ -76,7 +76,7 @@ public sealed class BlockRopeArrowAnchor : Block
 
     public override Cuboidf[] GetCollisionBoxes(IBlockAccessor blockAccessor, BlockPos pos)
     {
-        return Array.Empty<Cuboidf>();
+        return [new(0, 0, 0, 0, 1, 0)];
     }
 
     private Cuboidf[] GetArrowBoxes(IBlockAccessor blockAccessor, BlockPos pos)
