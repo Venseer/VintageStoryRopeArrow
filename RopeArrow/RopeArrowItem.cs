@@ -8,20 +8,28 @@ namespace RopeArrow;
 public sealed class RopeArrowItem : Item
 {
     private MultiTextureMeshRef? heldArrowMesh;
+    private MultiTextureMeshRef? inventorySpriteMesh;
 
-    public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
+    public override void OnBeforeRender(ICoreClientAPI clientAPI, ItemStack itemStack, EnumItemRenderTarget itemRenderTarget, ref ItemRenderInfo renderInfo)
     {
-        base.OnBeforeRender(capi, itemstack, target, ref renderinfo);
+        base.OnBeforeRender(clientAPI, itemStack, itemRenderTarget, ref renderInfo);
 
-        if (target is not (EnumItemRenderTarget.HandTp or EnumItemRenderTarget.HandTpOff))
+        if (itemRenderTarget == EnumItemRenderTarget.Gui)
         {
+            inventorySpriteMesh ??= GetInventorySpriteMesh(clientAPI);
+            if (inventorySpriteMesh != null)
+            {
+                renderInfo.ModelRef = inventorySpriteMesh;
+            }
             return;
         }
 
-        heldArrowMesh ??= GetHeldArrowMesh(capi, itemstack);
+        if (itemRenderTarget is not (EnumItemRenderTarget.HandFp or EnumItemRenderTarget.HandTp or EnumItemRenderTarget.HandTpOff)) return;
+
+        heldArrowMesh ??= GetHeldArrowMesh(clientAPI, itemStack);
         if (heldArrowMesh != null)
         {
-            renderinfo.ModelRef = heldArrowMesh;
+            renderInfo.ModelRef = heldArrowMesh;
         }
     }
 
@@ -36,5 +44,16 @@ public sealed class RopeArrowItem : Item
         string material = itemstack.Collectible.LastCodePart();
         Item? arrow = capi.World.GetItem(new AssetLocation("game", "arrow-" + material));
         return arrow == null ? null : capi.TesselatorManager.GetDefaultItemMeshRef(arrow);
+    }
+
+    private MultiTextureMeshRef? GetInventorySpriteMesh(ICoreClientAPI capi)
+    {
+        var location = new AssetLocation("ropearrow:shapes/item/ropearrow-icon.json");
+        var iconShape = Vintagestory.API.Common.Shape.TryGet(capi, location);
+        if (iconShape == null) return null;
+
+        iconShape.CollectAndResolveReferences(capi.Logger, location.ToString());
+        capi.Tesselator.TesselateShape(this, iconShape, out var mesh);
+        return capi.Render.UploadMultiTextureMesh(mesh);
     }
 }
