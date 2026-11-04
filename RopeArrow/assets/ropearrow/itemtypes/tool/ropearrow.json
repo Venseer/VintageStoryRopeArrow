@@ -8,20 +8,60 @@
     }
   ],
   "maxstacksize": 16,
-  "shape": { "base": "ropearrow:item/ropearrow-icon" },
+  "shapeByType": {
+    "*-crude": { "base": "game:item/tool/arrow-crude" },
+    "*-flint": { "base": "game:item/tool/arrow-stone" },
+    "*-obsidian": { "base": "game:item/tool/arrow-stone" },
+    "*-gold": { "base": "game:item/tool/arrow-gold" },
+    "*-silver": { "base": "game:item/tool/arrow-silver" },
+    "*": { "base": "game:item/tool/arrow-copper" }
+  },
   "texturesByType": {
     "*-crude": { "icon": { "base": "ropearrow:item/rope-arrow-crude" } },
-    "*-flint": { "icon": { "base": "ropearrow:item/rope-arrow-flint" } },
-    "*-copper": { "icon": { "base": "ropearrow:item/rope-arrow-copper" } },
-    "*-tinbronze": { "icon": { "base": "ropearrow:item/rope-arrow-tinbronze" } },
-    "*-bismuthbronze": { "icon": { "base": "ropearrow:item/rope-arrow-bismuthbronze" } },
-    "*-blackbronze": { "icon": { "base": "ropearrow:item/rope-arrow-blackbronze" } },
-    "*-gold": { "icon": { "base": "ropearrow:item/rope-arrow-gold" } },
-    "*-silver": { "icon": { "base": "ropearrow:item/rope-arrow-silver" } },
-    "*-iron": { "icon": { "base": "ropearrow:item/rope-arrow-iron" } },
-    "*-meteoriciron": { "icon": { "base": "ropearrow:item/rope-arrow-meteoriciron" } },
-    "*-steel": { "icon": { "base": "ropearrow:item/rope-arrow-steel" } },
-    "*-obsidian": { "icon": { "base": "ropearrow:item/rope-arrow-obsidian" } }
+    "*-flint": {
+      "icon": { "base": "ropearrow:item/rope-arrow-flint" },
+      "material": { "base": "game:block/stone/flint" }
+    },
+    "*-obsidian": {
+      "icon": { "base": "ropearrow:item/rope-arrow-obsidian" },
+      "material": { "base": "game:block/stone/rock/obsidian1" }
+    },
+    "*-gold": {
+      "icon": { "base": "ropearrow:item/rope-arrow-gold" },
+      "material": { "base": "game:block/metal/ingot/gold" }
+    },
+    "*-silver": {
+      "icon": { "base": "ropearrow:item/rope-arrow-silver" },
+      "material": { "base": "game:block/metal/ingot/silver" }
+    },
+    "*-tinbronze": {
+      "icon": { "base": "ropearrow:item/rope-arrow-tinbronze" },
+      "material": { "base": "game:block/metal/ingot/tinbronze" }
+    },
+    "*-bismuthbronze": {
+      "icon": { "base": "ropearrow:item/rope-arrow-bismuthbronze" },
+      "material": { "base": "game:block/metal/ingot/bismuthbronze" }
+    },
+    "*-blackbronze": {
+      "icon": { "base": "ropearrow:item/rope-arrow-blackbronze" },
+      "material": { "base": "game:block/metal/ingot/blackbronze" }
+    },
+    "*-iron": {
+      "icon": { "base": "ropearrow:item/rope-arrow-iron" },
+      "material": { "base": "game:block/metal/ingot/iron" }
+    },
+    "*-meteoriciron": {
+      "icon": { "base": "ropearrow:item/rope-arrow-meteoriciron" },
+      "material": { "base": "game:block/metal/ingot/meteoriciron" }
+    },
+    "*-steel": {
+      "icon": { "base": "ropearrow:item/rope-arrow-steel" },
+      "material": { "base": "game:block/metal/ingot/steel" }
+    },
+    "*-copper": {
+      "icon": { "base": "ropearrow:item/rope-arrow-copper" },
+      "material": { "base": "game:block/metal/ingot/copper" }
+    }
   },
   "tpHandTransform": {
     "translation": { "x": -1.05, "y": -0.4599, "z": -0.87 },
